@@ -24,7 +24,7 @@ def define_computation_graph(vocab_size: int, batch_size: int):
     #     rnn_outputs, rnn_states = tf.nn.dynamic_rnn(cell, input_embeddings, initial_state=initial_state)
     with tf.name_scope('RNN'):
 
-        num_units = [C.HIDDEN_SIZE, C.HIDDEN_SIZE]
+        num_units = [C.HIDDEN_SIZE, C.HIDDEN_SIZE, C.HIDDEN_SIZE, C.HIDDEN_SIZE]
         cells = [tf.nn.rnn_cell.BasicLSTMCell(num_units=n) for n in num_units]
         stacked_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(cells)
 
