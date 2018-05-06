@@ -18,21 +18,24 @@ def define_computation_graph(vocab_size: int, batch_size: int):
         embedding = tf.get_variable('word_embedding', [vocab_size, C.HIDDEN_SIZE])
         input_embeddings = tf.nn.embedding_lookup(embedding, inputs)
 
-    with tf.name_scope('RNN1'):
-        cell = tf.nn.rnn_cell.BasicLSTMCell(C.HIDDEN_SIZE, state_is_tuple=True)
-        initial_state = cell.zero_state(batch_size, tf.float32)
-        rnn_outputs1, rnn_states1 = tf.nn.dynamic_rnn(cell, input_embeddings, initial_state=initial_state)
+    # with tf.name_scope('RNN'):
+    #     cell = tf.nn.rnn_cell.BasicLSTMCell(C.HIDDEN_SIZE, state_is_tuple=True)
+    #     initial_state = cell.zero_state(batch_size, tf.float32)
+    #     rnn_outputs, rnn_states = tf.nn.dynamic_rnn(cell, input_embeddings, initial_state=initial_state)
+    with tf.name_scope('RNN'):
 
-    with tf.name_scope('RNN2'):
-        cell = tf.nn.rnn_cell.BasicLSTMCell(C.HIDDEN_SIZE, state_is_tuple=True)
-        initial_state = cell.zero_state(batch_size, tf.float32)
-        rnn_outputs2, rnn_states2 = tf.nn.dynamic_rnn(cell, rnn_outputs1, initial_state=initial_state)
+        num_units = [C.HIDDEN_SIZE, C.HIDDEN_SIZE]
+        cells = [tf.nn.rnn_cell.BasicLSTMCell(num_units=n) for n in num_units]
+        stacked_rnn_cell = tf.nn.rnn_cell.MultiRNNCell(cells)
+
+        initial_state = stacked_rnn_cell.zero_state(batch_size, tf.float32)
+        rnn_outputs, rnn_states = tf.nn.dynamic_rnn(stacked_rnn_cell, input_embeddings, initial_state=initial_state)
 
     with tf.name_scope('Final_Projection'):
         w = tf.get_variable('w', shape=(C.HIDDEN_SIZE, vocab_size))
         b = tf.get_variable('b', vocab_size)
         final_projection = lambda x: tf.matmul(x, w) + b
-        logits = map_fn(final_projection, rnn_outputs2)
+        logits = map_fn(final_projection, rnn_outputs)
 
     with tf.name_scope('Cost'):
         # weighted average cross-entropy (log-perplexity) per symbol
